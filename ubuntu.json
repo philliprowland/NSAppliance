@@ -1,0 +1,111 @@
+{
+  "_comment": "Build with `packer build ubuntu.json`",
+  "builders": [
+    {
+      "boot_command": [
+        "{{ user `boot_command_prefix` }}",
+        "/install/vmlinuz noapic ",
+        "initrd=/install/initrd.gz ",
+        "file=/floppy/{{ user `preseed` }} ",
+        "debian-installer={{ user `locale` }} auto locale={{ user `locale` }} kbd-chooser/method=us ",
+        "hostname={{ user `hostname` }} ",
+        "grub-installer/bootdev=/dev/sda<wait> ",
+        "fb=false debconf/frontend=noninteractive ",
+        "keyboard-configuration/modelcode=SKIP keyboard-configuration/layout=USA ",
+        "keyboard-configuration/variant=USA console-setup/ask_detect=false ",
+        "passwd/user-fullname={{ user `ssh_fullname` }} ",
+        "passwd/user-password={{ user `ssh_password` }} ",
+        "passwd/user-password-again={{ user `ssh_password` }} ",
+        "passwd/username={{ user `ssh_username` }} ",
+        "-- <enter>"
+      ],
+      "disk_size": "{{ user `disk_size` }}",
+      "floppy_files": [
+        "http/{{ user `preseed` }}"
+      ],
+      "guest_os_type": "{{ user `vmware_guest_os_type` }}",
+      "headless": "{{ user `headless` }}",
+      "http_directory": "http",
+      "iso_checksum": "{{ user `iso_checksum` }}",
+      "iso_checksum_type": "{{ user `iso_checksum_type` }}",
+      "iso_urls": [
+        "{{ user `iso_url` }}"
+      ],
+      "output_directory": "output-{{ user `vm_name` }}-vmware-iso",
+      "shutdown_command": "echo '{{ user `ssh_password` }}'|sudo -S shutdown -P now",
+      "ssh_password": "{{ user `ssh_password` }}",
+      "ssh_username": "{{ user `ssh_username` }}",
+      "ssh_wait_timeout": "10000s",
+      "tools_upload_flavor": "linux",
+      "type": "vmware-iso",
+      "vm_name": "{{ user `vm_name` }}",
+      "vmx_data": {
+        "ethernet0.pciSlotNumber": "32",
+        "memsize": "{{ user `memory` }}",
+        "numvcpus": "{{ user `cpus` }}"
+      },
+      "vmx_remove_ethernet_interfaces": false
+    }
+  ],
+  "provisioners": [
+    {
+      "environment_vars": [
+        "CLEANUP_PAUSE={{user `cleanup_pause`}}",
+        "DESKTOP={{user `desktop`}}",
+        "UPDATE={{user `update`}}",
+        "INSTALL_SSH_KEY={{user `install_ssh_key`}}",
+        "SSH_USERNAME={{user `ssh_username`}}",
+        "SSH_PASSWORD={{user `ssh_password`}}",
+        "http_proxy={{user `http_proxy`}}",
+        "https_proxy={{user `https_proxy`}}",
+        "ftp_proxy={{user `ftp_proxy`}}",
+        "rsync_proxy={{user `rsync_proxy`}}",
+        "no_proxy={{user `no_proxy`}}"
+      ],
+      "execute_command": "echo '{{ user `ssh_password` }}' | {{.Vars}} sudo -E -S bash '{{.Path}}'",
+      "scripts": [
+        "script/update.sh",
+        "script/desktop.sh",
+        "script/user.sh",
+        "script/sshd.sh",
+        "script/vmware.sh",
+        "script/motd.sh",
+        "{{user `custom_script`}}",
+        "script/minimize.sh",
+        "script/cleanup.sh"
+      ],
+      "type": "shell",
+      "expect_disconnect": "true"
+    }
+  ],
+  "variables": {
+    "boot_command_prefix": "<esc><esc><enter><wait>",
+    "cleanup_pause": "",
+    "cpus": "1",
+    "custom_script": "custom-script.sh",
+    "desktop": "false",
+    "disk_size": "65536",
+    "ftp_proxy": "{{env `ftp_proxy`}}",
+    "headless": "",
+    "http_proxy": "{{env `http_proxy`}}",
+    "https_proxy": "{{env `https_proxy`}}",
+    "install_ssh_key": "true",
+    "iso_checksum": "a5b0ea5918f850124f3d72ef4b85bda82f0fcd02ec721be19c1a6952791c8ee8",
+    "iso_checksum_type": "sha256",
+    "iso_url": "/home/phillip/Downloads/images/ubuntu-18.04.1-server-amd64.iso",
+    "locale": "en_US",
+    "memory": "512",
+    "no_proxy": "{{env `no_proxy`}}",
+    "preseed" : "preseed.cfg",
+    "rsync_proxy": "{{env `rsync_proxy`}}",
+    "hostname": "NSUA",
+    "ssh_fullname": "phillip",
+    "ssh_password": "packer",
+    "ssh_username": "phillip",
+    "update": "true",
+    "version": "0.1.0",
+    "vm_name": "ubuntu1804",
+    "vmware_guest_os_type": "ubuntu-64"
+    "appliance_vpn_key": "
+  }
+}
